@@ -1,0 +1,5 @@
+{
+  "name": "Zen Sudoku Master",
+  "description": "A sophisticated Sudoku game featuring a sleek UI, multiple difficulty levels, and AI-powered smart hints using Gemini.",
+  "requestFramePermissions": []
+}
