@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Difficulty, GameState, Grid, HintResponse, GridSize } from './types';
+import { Difficulty, GameState, Grid, GridSize } from './types';
 import { createEmptyGrid, generatePuzzle, checkWin, getSubgridDimensions } from './utils/sudokuLogic';
-import { getSmartHint } from './services/gemini';
 
 const Header = () => (
   <header className="py-8 text-center">
@@ -28,14 +27,11 @@ const App: React.FC = () => {
   
   const [solution, setSolution] = useState<number[][]>([]);
   const [isNotesMode, setIsNotesMode] = useState(false);
-  const [hint, setHint] = useState<HintResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isThinking, setIsThinking] = useState(false);
   const [showSelector, setShowSelector] = useState(false);
 
   const startNewGame = useCallback((size: GridSize = gameState.gridSize, diff: Difficulty = gameState.difficulty) => {
     setIsGenerating(true);
-    setHint(null);
     setShowSelector(false);
     setTimeout(() => {
       const { puzzle, solution: sol } = generatePuzzle(diff, size);
@@ -115,18 +111,6 @@ const App: React.FC = () => {
     if (!isNotesMode) setShowSelector(false);
   };
 
-  const requestHint = async () => {
-    if (isThinking || gameState.isWon) return;
-    setIsThinking(true);
-    const result = await getSmartHint(gameState.grid, solution);
-    if (result) {
-      setHint(result);
-      setGameState(prev => ({ ...prev, selectedCell: [result.row, result.col] }));
-      setShowSelector(false);
-    }
-    setIsThinking(false);
-  };
-
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -135,7 +119,6 @@ const App: React.FC = () => {
 
   const { rows, cols } = getSubgridDimensions(gameState.gridSize);
 
-  // Vibrant neon-inspired palette for dark theme
   const subgridColors = [
     'bg-indigo-500/5', 'bg-cyan-500/5', 'bg-purple-500/5',
     'bg-emerald-500/5', 'bg-blue-500/5', 'bg-rose-500/5',
@@ -156,7 +139,6 @@ const App: React.FC = () => {
 
       <main className="w-full max-w-4xl flex flex-col items-center gap-6">
         
-        {/* Top Controls */}
         <div className="flex flex-wrap justify-center gap-4">
            <div className="flex bg-slate-900/80 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-2xl">
             {[4, 6, 9].map((s) => (
@@ -183,7 +165,6 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Status Bar */}
         <div className="flex justify-between w-full max-w-[480px] font-bold px-4 text-xs">
           <div className="flex items-center gap-4">
             <span className="text-slate-500 uppercase tracking-[0.2em] text-[10px]">Errors</span>
@@ -199,7 +180,6 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Sudoku Grid Container - Increased divider contrast */}
         <div className="relative p-1 bg-slate-600 rounded-2xl shadow-[0_0_80px_-20px_rgba(79,70,229,0.4)] border-4 border-slate-600 overflow-hidden">
           <div 
             className="grid bg-slate-900 transition-all duration-300"
@@ -218,7 +198,6 @@ const App: React.FC = () => {
                 
                 const subgridColor = getSubgridColor(rIdx, cIdx);
 
-                // Grid border logic - Thick dividers for subgrids, standard dividers for cells
                 const isSubgridBottom = (rIdx + 1) % rows === 0 && rIdx !== gameState.gridSize - 1;
                 const isSubgridRight = (cIdx + 1) % cols === 0 && cIdx !== gameState.gridSize - 1;
 
@@ -228,7 +207,6 @@ const App: React.FC = () => {
                     onClick={() => handleCellClick(rIdx, cIdx)}
                     className={`
                       relative flex items-center justify-center cursor-pointer select-none transition-all duration-150
-                      /* Base dividers: lighter and thicker than before for high visibility */
                       border-slate-700/60
                       ${isSubgridBottom ? 'border-b-[4px] border-slate-600' : 'border-b-[1.5px]'}
                       ${isSubgridRight ? 'border-r-[4px] border-slate-600' : 'border-r-[1.5px]'}
@@ -256,7 +234,6 @@ const App: React.FC = () => {
             )}
           </div>
           
-          {/* Floating Number Selector Overlay */}
           {showSelector && gameState.selectedCell && !gameState.isWon && (
             <div 
               className="absolute inset-0 flex items-center justify-center z-40 bg-slate-950/60 backdrop-blur-md rounded-xl animate-in fade-in zoom-in duration-200"
@@ -328,52 +305,39 @@ const App: React.FC = () => {
           )}
         </div>
 
-        {/* Footer Area: AI & Global Actions */}
-        <div className="w-full max-w-[480px] space-y-6 px-2">
-          
-          {/* AI Logic Engine Card */}
-          <div className="bg-slate-900/40 backdrop-blur-sm p-6 rounded-[32px] border border-white/5 shadow-inner transition-all group hover:border-indigo-500/30">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-gradient-to-tr from-cyan-400 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xs font-black shadow-lg shadow-cyan-500/20">GEM</div>
-                <div>
-                  <h3 className="font-black text-slate-100 text-[10px] uppercase tracking-widest">Logic Engine</h3>
-                  <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">AI Analysis</p>
-                </div>
+        <div className="w-full max-w-[480px] flex flex-col gap-4 px-2">
+          <div className="grid grid-cols-2 gap-4">
+            <button 
+              onClick={() => setGameState(p => ({ ...p, isPaused: !p.isPaused }))}
+              className="flex items-center justify-center gap-3 bg-slate-900/80 backdrop-blur-md border border-white/10 p-5 rounded-[24px] group hover:bg-indigo-600 hover:border-indigo-400 transition-all duration-300 shadow-xl active:scale-95"
+            >
+              <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-white group-hover:text-indigo-600 transition-colors">
+                {gameState.isPaused ? (
+                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                )}
               </div>
-              <button 
-                onClick={requestHint}
-                disabled={isThinking || gameState.isWon}
-                className={`text-[10px] px-8 py-3 rounded-full font-black transition-all ${isThinking ? 'bg-slate-800 text-slate-600' : 'bg-white text-slate-900 hover:bg-indigo-400 hover:text-white active:scale-95 uppercase tracking-widest shadow-xl'}`}
-              >
-                {isThinking ? 'Reading Board...' : 'Get Logic'}
-              </button>
-            </div>
-            
-            {hint && !isThinking ? (
-              <div className="text-xs text-slate-300 animate-in fade-in slide-in-from-bottom-2 duration-500 bg-white/5 p-5 rounded-2xl border border-white/10 mt-2">
-                <p className="leading-relaxed">
-                  <span className="text-cyan-400 font-black mr-2 tracking-tighter">[{hint.row + 1}, {hint.col + 1}]</span>
-                  {hint.explanation}
-                </p>
-              </div>
-            ) : (
-              <div className="h-4 flex items-center">
-                <p className="text-[10px] text-slate-600 italic tracking-wide group-hover:text-slate-500 transition-colors">Stuck? Let Gemini scan the board for patterns.</p>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-center gap-12 text-slate-600 text-[10px] uppercase font-black tracking-[0.5em] pt-4">
-            <button onClick={() => setGameState(p => ({ ...p, isPaused: !p.isPaused }))} className="hover:text-cyan-400 transition-colors">
-              {gameState.isPaused ? 'Resume' : 'Pause'}
+              <span className="font-black text-[10px] uppercase tracking-[0.3em] text-slate-100 group-hover:text-white">
+                {gameState.isPaused ? 'Resume' : 'Pause Game'}
+              </span>
             </button>
-            <button onClick={() => startNewGame()} className="hover:text-rose-400 transition-colors">Reset</button>
+
+            <button 
+              onClick={() => startNewGame()}
+              className="flex items-center justify-center gap-3 bg-slate-900/80 backdrop-blur-md border border-white/10 p-5 rounded-[24px] group hover:bg-rose-600 hover:border-rose-400 transition-all duration-300 shadow-xl active:scale-95"
+            >
+              <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400 group-hover:bg-white group-hover:text-rose-600 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              </div>
+              <span className="font-black text-[10px] uppercase tracking-[0.3em] text-slate-100 group-hover:text-white">
+                Reset Board
+              </span>
+            </button>
           </div>
         </div>
       </main>
 
-      {/* Pause Modal */}
       {gameState.isPaused && !gameState.isWon && (
         <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-3xl flex items-center justify-center z-[100] animate-in fade-in duration-500">
           <div className="text-center max-w-xs w-full p-12">
