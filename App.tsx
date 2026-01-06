@@ -137,9 +137,9 @@ const App: React.FC = () => {
 
   // Vibrant neon-inspired palette for dark theme
   const subgridColors = [
-    'bg-indigo-500/10', 'bg-cyan-500/10', 'bg-purple-500/10',
-    'bg-emerald-500/10', 'bg-blue-500/10', 'bg-rose-500/10',
-    'bg-amber-500/10', 'bg-violet-500/10', 'bg-teal-500/10'
+    'bg-indigo-500/5', 'bg-cyan-500/5', 'bg-purple-500/5',
+    'bg-emerald-500/5', 'bg-blue-500/5', 'bg-rose-500/5',
+    'bg-amber-500/5', 'bg-violet-500/5', 'bg-teal-500/5'
   ];
 
   const getSubgridColor = (r: number, c: number) => {
@@ -156,7 +156,7 @@ const App: React.FC = () => {
 
       <main className="w-full max-w-4xl flex flex-col items-center gap-6">
         
-        {/* Top Controls - Glassmorphism style */}
+        {/* Top Controls */}
         <div className="flex flex-wrap justify-center gap-4">
            <div className="flex bg-slate-900/80 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-2xl">
             {[4, 6, 9].map((s) => (
@@ -199,8 +199,8 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Sudoku Grid Container - Fixed Borders & More Distinct Lines */}
-        <div className="relative p-1 bg-slate-700 rounded-2xl shadow-[0_0_80px_-20px_rgba(79,70,229,0.4)] border-4 border-slate-700 overflow-hidden">
+        {/* Sudoku Grid Container - Increased divider contrast */}
+        <div className="relative p-1 bg-slate-600 rounded-2xl shadow-[0_0_80px_-20px_rgba(79,70,229,0.4)] border-4 border-slate-600 overflow-hidden">
           <div 
             className="grid bg-slate-900 transition-all duration-300"
             style={{ 
@@ -218,7 +218,7 @@ const App: React.FC = () => {
                 
                 const subgridColor = getSubgridColor(rIdx, cIdx);
 
-                // Grid border logic
+                // Grid border logic - Thick dividers for subgrids, standard dividers for cells
                 const isSubgridBottom = (rIdx + 1) % rows === 0 && rIdx !== gameState.gridSize - 1;
                 const isSubgridRight = (cIdx + 1) % cols === 0 && cIdx !== gameState.gridSize - 1;
 
@@ -228,12 +228,13 @@ const App: React.FC = () => {
                     onClick={() => handleCellClick(rIdx, cIdx)}
                     className={`
                       relative flex items-center justify-center cursor-pointer select-none transition-all duration-150
-                      border-slate-800/80
-                      ${isSubgridBottom ? 'border-b-[5px] border-slate-700' : 'border-b-[0.5px]'}
-                      ${isSubgridRight ? 'border-r-[5px] border-slate-700' : 'border-r-[0.5px]'}
+                      /* Base dividers: lighter and thicker than before for high visibility */
+                      border-slate-700/60
+                      ${isSubgridBottom ? 'border-b-[4px] border-slate-600' : 'border-b-[1.5px]'}
+                      ${isSubgridRight ? 'border-r-[4px] border-slate-600' : 'border-r-[1.5px]'}
                       ${subgridColor}
-                      ${isRelated || isBox ? 'bg-indigo-500/5' : ''}
-                      ${isSelected ? 'bg-indigo-500 text-white z-10 scale-[1.05] shadow-[0_0_30px_rgba(99,102,241,0.6)] !border-none rounded-lg' : ''}
+                      ${isRelated || isBox ? 'bg-indigo-500/[0.08]' : ''}
+                      ${isSelected ? 'bg-indigo-500 text-white z-10 scale-[1.06] shadow-[0_0_40px_rgba(99,102,241,0.7)] !border-none rounded-lg' : ''}
                       ${!isSelected && isSameValue ? 'bg-indigo-500/20 ring-1 ring-indigo-500/40' : ''}
                       ${!cell.valid && cell.value !== null ? '!bg-rose-500/20 !text-rose-400 !border-rose-500/50 ring-2 ring-rose-500/40 z-10' : ''}
                       ${cell.fixed ? 'font-black text-slate-100' : 'font-medium text-cyan-400'}
@@ -372,7 +373,7 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Pause Modal - Ultra Dark Glass */}
+      {/* Pause Modal */}
       {gameState.isPaused && !gameState.isWon && (
         <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-3xl flex items-center justify-center z-[100] animate-in fade-in duration-500">
           <div className="text-center max-w-xs w-full p-12">
