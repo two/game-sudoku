@@ -65,13 +65,12 @@ const App: React.FC = () => {
   }, [gameState.isPaused, gameState.isWon]);
 
   const handleCellClick = (r: number, c: number) => {
-    if (gameState.grid[r][c].fixed) {
-      setGameState(prev => ({ ...prev, selectedCell: [r, c] }));
-      setShowSelector(false);
-      return;
-    }
     setGameState(prev => ({ ...prev, selectedCell: [r, c] }));
-    setShowSelector(true);
+    if (!gameState.grid[r][c].fixed) {
+      setShowSelector(true);
+    } else {
+      setShowSelector(false);
+    }
   };
 
   const handleNumberInput = (num: number | null) => {
@@ -139,13 +138,14 @@ const App: React.FC = () => {
 
       <main className="w-full max-w-4xl flex flex-col items-center gap-6">
         
+        {/* Difficulty & Size Controls */}
         <div className="flex flex-wrap justify-center gap-4">
            <div className="flex bg-slate-900/80 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-2xl">
             {[4, 6, 9].map((s) => (
               <button
                 key={s}
                 onClick={() => startNewGame(s as GridSize)}
-                className={`px-6 py-2 rounded-xl text-sm font-black transition-all ${gameState.gridSize === s ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/40' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`px-5 py-2 rounded-xl text-sm font-black transition-all ${gameState.gridSize === s ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/40' : 'text-slate-500 hover:text-slate-300'}`}
               >
                 {s}x{s}
               </button>
@@ -157,7 +157,7 @@ const App: React.FC = () => {
               <button
                 key={d}
                 onClick={() => startNewGame(gameState.gridSize, d)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${gameState.difficulty === d ? 'text-indigo-400 bg-white/5 shadow-inner' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${gameState.difficulty === d ? 'text-indigo-400 bg-white/5 shadow-inner' : 'text-slate-500 hover:text-slate-300'}`}
               >
                 {d}
               </button>
@@ -165,6 +165,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
+        {/* Status Bar */}
         <div className="flex justify-between w-full max-w-[480px] font-bold px-4 text-xs">
           <div className="flex items-center gap-4">
             <span className="text-slate-500 uppercase tracking-[0.2em] text-[10px]">Errors</span>
@@ -180,6 +181,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
+        {/* Sudoku Grid */}
         <div className="relative p-1 bg-slate-600 rounded-2xl shadow-[0_0_80px_-20px_rgba(79,70,229,0.4)] border-4 border-slate-600 overflow-hidden">
           <div 
             className="grid bg-slate-900 transition-all duration-300"
@@ -197,7 +199,6 @@ const App: React.FC = () => {
                 const isBox = gameState.selectedCell && (Math.floor(rIdx / rows) === Math.floor(gameState.selectedCell[0] / rows) && Math.floor(cIdx / cols) === Math.floor(gameState.selectedCell[1] / cols));
                 
                 const subgridColor = getSubgridColor(rIdx, cIdx);
-
                 const isSubgridBottom = (rIdx + 1) % rows === 0 && rIdx !== gameState.gridSize - 1;
                 const isSubgridRight = (cIdx + 1) % cols === 0 && cIdx !== gameState.gridSize - 1;
 
@@ -233,53 +234,6 @@ const App: React.FC = () => {
               })
             )}
           </div>
-          
-          {showSelector && gameState.selectedCell && !gameState.isWon && (
-            <div 
-              className="absolute inset-0 flex items-center justify-center z-40 bg-slate-950/60 backdrop-blur-md rounded-xl animate-in fade-in zoom-in duration-200"
-              onClick={() => setShowSelector(false)}
-            >
-              <div 
-                className="bg-slate-900 p-8 rounded-[40px] shadow-2xl border border-white/5 w-full max-w-[340px] ring-1 ring-white/10"
-                onClick={e => e.stopPropagation()}
-              >
-                <div className="flex justify-between items-center mb-6 px-1">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select Value</span>
-                  <button 
-                    onClick={() => setIsNotesMode(!isNotesMode)}
-                    className={`px-4 py-2 rounded-full text-[10px] font-black transition-all uppercase tracking-widest ${isNotesMode ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30' : 'bg-slate-800 text-slate-500 border border-slate-700'}`}
-                  >
-                    Notes: {isNotesMode ? 'ON' : 'OFF'}
-                  </button>
-                </div>
-                <div className={`grid gap-4 ${gameState.gridSize === 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                  {Array.from({ length: gameState.gridSize }, (_, i) => i + 1).map(num => (
-                    <button
-                      key={num}
-                      onClick={() => handleNumberInput(num)}
-                      className="aspect-square bg-slate-800/50 hover:bg-indigo-500 hover:text-white rounded-[24px] text-2xl font-black text-slate-300 transition-all active:scale-90 flex items-center justify-center border border-white/5 shadow-xl hover:shadow-indigo-500/20"
-                    >
-                      {num}
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-8 flex gap-4">
-                  <button 
-                    onClick={() => handleNumberInput(null)}
-                    className="flex-1 py-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest border border-rose-500/20"
-                  >
-                    Clear
-                  </button>
-                  <button 
-                    onClick={() => setShowSelector(false)}
-                    className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest border border-slate-700"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {isGenerating && (
             <div className="absolute inset-0 flex items-center justify-center z-50 bg-slate-950/90 backdrop-blur-xl rounded-xl">
@@ -305,6 +259,7 @@ const App: React.FC = () => {
           )}
         </div>
 
+        {/* Prominent Action Buttons */}
         <div className="w-full max-w-[480px] flex flex-col gap-4 px-2">
           <div className="grid grid-cols-2 gap-4">
             <button 
@@ -338,8 +293,57 @@ const App: React.FC = () => {
         </div>
       </main>
 
+      {/* Floating Number Selector Modal - Using fixed to avoid clipping on mobile */}
+      {showSelector && gameState.selectedCell && !gameState.isWon && !gameState.isPaused && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-[110] bg-slate-950/80 backdrop-blur-lg animate-in fade-in duration-300 px-4"
+          onClick={() => setShowSelector(false)}
+        >
+          <div 
+            className="bg-slate-900 p-6 sm:p-8 rounded-[40px] shadow-2xl border border-white/10 w-full max-w-[340px] ring-1 ring-white/10 animate-in zoom-in slide-in-from-bottom-4 duration-300"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6 px-1">
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Select Value</span>
+              <button 
+                onClick={() => setIsNotesMode(!isNotesMode)}
+                className={`px-4 py-2 rounded-full text-[10px] font-black transition-all uppercase tracking-widest ${isNotesMode ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30' : 'bg-slate-800 text-slate-500 border border-slate-700'}`}
+              >
+                Notes: {isNotesMode ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            <div className={`grid gap-3 ${gameState.gridSize === 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+              {Array.from({ length: gameState.gridSize }, (_, i) => i + 1).map(num => (
+                <button
+                  key={num}
+                  onClick={() => handleNumberInput(num)}
+                  className="aspect-square bg-slate-800/50 hover:bg-indigo-500 hover:text-white rounded-[24px] text-2xl font-black text-slate-300 transition-all active:scale-90 flex items-center justify-center border border-white/5 shadow-xl"
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
+            <div className="mt-8 flex gap-3">
+              <button 
+                onClick={() => handleNumberInput(null)}
+                className="flex-1 py-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest border border-rose-500/20"
+              >
+                Clear
+              </button>
+              <button 
+                onClick={() => setShowSelector(false)}
+                className="flex-1 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest border border-slate-700"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pause Overlay */}
       {gameState.isPaused && !gameState.isWon && (
-        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-3xl flex items-center justify-center z-[100] animate-in fade-in duration-500">
+        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-3xl flex items-center justify-center z-[120] animate-in fade-in duration-500">
           <div className="text-center max-w-xs w-full p-12">
             <div className="w-28 h-28 bg-slate-900 border border-white/5 rounded-[48px] flex items-center justify-center mx-auto mb-10 shadow-3xl">
                <svg className="w-14 h-14 text-indigo-400 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
